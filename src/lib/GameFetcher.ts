@@ -14,7 +14,13 @@ class Schedule {
   }
 
   getDay(date: Date): ScheduleDay {
-    return this.days.find(day => day.date.getTime() === date.getTime());
+    let exists =  this.days.find(day => day.date.getTime() === date.getTime());
+
+    if (exists === undefined) {
+      throw new Error('Day does not exist');
+    }
+
+    return exists;
   }
 }
 
@@ -36,7 +42,13 @@ class ScheduleDay {
   }
 
   getTimeSlot(time: DayTime): TimeSlot {
-    return this.timeslots.find(timeSlot => timeSlot.time.equals(time));
+    let exists = this.timeslots.find(timeSlot => timeSlot.time.equals(time));
+
+    if (exists === undefined) {
+      throw new Error('TimeSlot does not exist');
+    }
+
+    return exists;
   }
 }
 
@@ -71,6 +83,10 @@ class DayTime {
     } else {
       // Number constructor overload
       const hour = hourOrString;
+
+      if (minute === undefined) {
+        throw new Error('minute must be provided when using the number constructor overload');
+      }
 
       if (hour < 0 || hour > 23) {
         throw new Error('hour must be between 0 and 23');
