@@ -1,68 +1,56 @@
 class Schedule {
-  days: ScheduleDay[];
+  schedule: Map<string, DaySchedule>;
 
   constructor() {
-    this.days = [];
+    this.schedule = new Map();
   }
 
-  addDay(day: ScheduleDay) {
-    this.days.push(day);
+  private formatDate(date: Date): string {
+    return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
   }
 
-  dayExists(date: Date): boolean {
-    return this.days.some(day => day.date.getTime() === date.getTime());
+  addDay(date: Date) {
+    this.schedule.set(this.formatDate(date), new DaySchedule());
   }
 
-  getDay(date: Date): ScheduleDay {
-    let exists =  this.days.find(day => day.date.getTime() === date.getTime());
-
-    if (exists === undefined) {
-      throw new Error('Day does not exist');
-    }
-
-    return exists;
-  }
-}
-
-class ScheduleDay {
-  date: Date;
-  timeslots: TimeSlot[];
-
-  constructor(date: Date) {
-    this.date = date;
-    this.timeslots = [];
+  hasDay(date: Date): boolean {
+    return this.schedule.has(this.formatDate(date));
   }
 
-  addTimeSlot(timeSlot: TimeSlot) {
-    this.timeslots.push(timeSlot);
-  }
+  getDay(date: Date): DaySchedule | undefined {
+    let day = this.schedule.get(this.formatDate(date));
 
-  timeSlotExists(time: DayTime): boolean {
-    return this.timeslots.some(timeSlot => timeSlot.time.equals(time));
-  }
-
-  getTimeSlot(time: DayTime): TimeSlot {
-    let exists = this.timeslots.find(timeSlot => timeSlot.time.equals(time));
-
-    if (exists === undefined) {
-      throw new Error('TimeSlot does not exist');
-    }
-
-    return exists;
+    return day;
   }
 }
 
-class TimeSlot {
-  time: DayTime;
-  teams: string[];
+class DaySchedule {
+  schedule: Map<string, string[]>;
 
-  constructor(time: DayTime) {
-    this.time = time;
-    this.teams = [];
+  constructor() {
+    this.schedule = new Map();
   }
 
-  addTeam(team: string) {
-    this.teams.push(team);
+  hasTimeslot(time: DayTime): boolean {
+    return this.schedule.has(time.toString());
+  }
+
+  getTimeslot(time: DayTime): string[] | undefined {
+    return this.schedule.get(time.toString());
+  }
+
+  addTimeslot(time: DayTime) {
+    if (!this.hasTimeslot(time)) {
+      this.schedule.set(time.toString(), []);
+    }
+  }
+
+  addTeam(timeslot: DayTime, team: string) {
+    if (!this.hasTimeslot(timeslot)) {
+      this.addTimeslot(timeslot);
+    }
+
+    this.schedule.get(timeslot.toString())!.push(team);
   }
 }
 
@@ -104,8 +92,22 @@ class DayTime {
   equals(other: DayTime): boolean {
     return this.hour === other.hour && this.minute === other.minute;
   }
-}
 
+  asMinutes(): number {
+    return this.hour * 60 + this.minute;
+  }
+
+  toString(): string {
+    return `${this.hour}:${this.minute}`;
+  }
+
+  static fromMinutes(minutes: number): DayTime {
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+
+    return new DayTime(hour, minute);
+  }
+}
 
 export async function fetchMonthSchedule(month: number): Promise<Schedule> {
   // Check if month is valid
@@ -152,22 +154,20 @@ export async function fetchMonthSchedule(month: number): Promise<Schedule> {
     const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 
     // Check if game date is already in the schedules array
-    if (!schedule.dayExists(date)) {
-      schedule.addDay(new ScheduleDay(date));
+    if (!schedule.hasDay(date)) {
+      schedule.addDay(date);
     }
 
-    let day = schedule.getDay(date);
+    let day = schedule.getDay(date)!;
 
     const time = new DayTime(game.aanvangstijd);
 
     // Check if timeslot exists
-    if (!day.timeSlotExists(time)) {
-      day.addTimeSlot(new TimeSlot(time));
+    if (!day.hasTimeslot(time)) {
+      day.addTimeslot(time);
     }
 
-    let timeSlot = day.getTimeSlot(time);
-
-    timeSlot.addTeam(game.thuisteam);
+    day.addTeam(time, game.thuisteam);
   }
   return schedule;
 }
