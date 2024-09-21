@@ -1,113 +1,5 @@
-class Schedule {
-  schedule: Map<string, DaySchedule>;
-
-  constructor() {
-    this.schedule = new Map();
-  }
-
-  private formatDate(date: Date): string {
-    return `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-  }
-
-  addDay(date: Date) {
-    this.schedule.set(this.formatDate(date), new DaySchedule());
-  }
-
-  hasDay(date: Date): boolean {
-    return this.schedule.has(this.formatDate(date));
-  }
-
-  getDay(date: Date): DaySchedule | undefined {
-    let day = this.schedule.get(this.formatDate(date));
-
-    return day;
-  }
-}
-
-class DaySchedule {
-  schedule: Map<string, string[]>;
-
-  constructor() {
-    this.schedule = new Map();
-  }
-
-  hasTimeslot(time: DayTime): boolean {
-    return this.schedule.has(time.toString());
-  }
-
-  getTimeslot(time: DayTime): string[] | undefined {
-    return this.schedule.get(time.toString());
-  }
-
-  addTimeslot(time: DayTime) {
-    if (!this.hasTimeslot(time)) {
-      this.schedule.set(time.toString(), []);
-    }
-  }
-
-  addTeam(timeslot: DayTime, team: string) {
-    if (!this.hasTimeslot(timeslot)) {
-      this.addTimeslot(timeslot);
-    }
-
-    this.schedule.get(timeslot.toString())!.push(team);
-  }
-}
-
-class DayTime {
-  hour: number;
-  minute: number;
-
-  constructor(hourOrString: number | string, minute?: number) {
-    if (typeof hourOrString === 'string') {
-      // String constructor overload format "HH:MM"
-      const hourString = hourOrString;
-      const parts = hourString.split(':');
-      if (parts.length !== 2) {
-        throw new Error('Invalid time string');
-      }
-      this.hour = parseInt(parts[0]);
-      this.minute = parseInt(parts[1]);
-    } else {
-      // Number constructor overload
-      const hour = hourOrString;
-
-      if (minute === undefined) {
-        throw new Error('minute must be provided when using the number constructor overload');
-      }
-
-      if (hour < 0 || hour > 23) {
-        throw new Error('hour must be between 0 and 23');
-      }
-      if (minute < 0 || minute > 59) {
-        throw new Error('minute must be between 0 and 59');
-      }
-
-      this.hour = hourOrString;
-      this.minute = minute;
-    }
-  }
-
-  // Overload for comparison
-  equals(other: DayTime): boolean {
-    return this.hour === other.hour && this.minute === other.minute;
-  }
-
-  asMinutes(): number {
-    return this.hour * 60 + this.minute;
-  }
-
-  toString(): string {
-    return `${this.hour}:${this.minute}`;
-  }
-
-  static fromMinutes(minutes: number): DayTime {
-    const hour = Math.floor(minutes / 60);
-    const minute = minutes % 60;
-
-    return new DayTime(hour, minute);
-  }
-}
+import { Schedule } from './types/Schedule';
+import { DayTime } from './types/Time';
 
 export async function fetchMonthSchedule(month: number): Promise<Schedule> {
   // Check if month is valid
@@ -160,7 +52,7 @@ export async function fetchMonthSchedule(month: number): Promise<Schedule> {
 
     let day = schedule.getDay(date)!;
 
-    const time = new DayTime(game.aanvangstijd);
+    const time = DayTime.fromString(game.aanvangstijd);
 
     // Check if timeslot exists
     if (!day.hasTimeslot(time)) {
@@ -169,5 +61,9 @@ export async function fetchMonthSchedule(month: number): Promise<Schedule> {
 
     day.addTeam(time, game.thuisteam);
   }
+
+  schedule.addLeadAndBackTime();
+  schedule.sort();
+
   return schedule;
 }
