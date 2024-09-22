@@ -66,5 +66,5 @@ export async function fetchMonthSchedule(month: number): Promise<AppTypes.Schedu
   schedule.addLeadAndBackTime();
   schedule.sort();
 
-  return schedule.toPOJO();
+  return schedule.toAppSchedule();
 }

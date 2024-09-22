@@ -8,16 +8,26 @@
 </script>
 
 {#each schedule.matchDays as date}
+{@const matchDayTeams = date.getTeams()}
   <div>
     <h2>{date.date}</h2>
     <ul>
       {#each date.timeslots as timeslot}
         <li>
+          <div>
           <h3>{timeslot.time}</h3>
+          <!-- Create select with match day teams -->
+          <select>
+            <option value="" hidden disabled selected>Selecteer team</option>
+          {#each matchDayTeams as matchDayTeam}
+          <option value={matchDayTeam.id}>{matchDayTeam.name}</option>
+          {/each}
+        </select>
+      </div>
           <ul>
             {#each timeslot.teams as team}
               <li>
-                <h4>{team}</h4>
+                <h4>{team.name} {(team.parents) ? "(Ouders)" : ""}</h4>  
               </li>
             {/each}
           </ul>

@@ -1,3 +1,4 @@
+import { Team, type POJOTeam } from "./Team";
 import { Time } from "./Time";
 
 export class Schedule {
@@ -21,7 +22,7 @@ export class Schedule {
       matchDay.timeslots.forEach(timeSlot => {
         let pojoTimeSlot: POJOTimeSlot = {
           time: timeSlot.time.toString(),
-          teams: timeSlot.teams
+          teams: timeSlot.teams.map(team => team.toPOJO())
         };
 
         pojoMatchDay.timeslots.push(pojoTimeSlot);
@@ -41,7 +42,7 @@ export class Schedule {
 
       pojoMatchDay.timeslots.forEach(pojoTimeSlot => {
         let timeSlot = new TimeSlot(Time.fromString(pojoTimeSlot.time));
-        timeSlot.teams = pojoTimeSlot.teams;
+        timeSlot.teams = pojoTimeSlot.teams.map(pojoTeam => Team.fromPOJO(pojoTeam));
 
         matchDay.timeslots.push(timeSlot);
       });
@@ -61,11 +62,23 @@ export class MatchDay {
     this.date = date;
     this.timeslots = [];
   }
+
+  getTeams(): Team[] {
+    let teams: Team[] = [];
+
+    this.timeslots.forEach(timeSlot => {
+      timeSlot.teams.forEach(team => {
+        teams.push(team);
+      });
+    });
+
+    return teams;
+  }
 }
 
 export class TimeSlot {
   time: Time;
-  teams: string[];
+  teams: Team[];
 
   constructor(time: Time) {
     this.time = time;
@@ -84,5 +97,5 @@ export interface POJOMatchDay {
 
 export interface POJOTimeSlot {
   time: string;
-  teams: string[];
+  teams: POJOTeam[];
 }

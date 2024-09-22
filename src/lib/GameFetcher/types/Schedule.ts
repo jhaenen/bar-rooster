@@ -2,6 +2,7 @@ import { gameTime } from "../config";
 import { DayTime } from "$lib/types/Time";
 
 import * as AppSchedule from "$lib/types/Schedule";
+import { Team } from "$lib/types/Team";
 
 export class Schedule {
   schedule: Map<string, DaySchedule>;
@@ -59,21 +60,19 @@ export class Schedule {
     });
   }
 
-  toPOJO(): AppSchedule.Schedule {
-    let schedule: AppSchedule.Schedule;
-
-    schedule = new AppSchedule.Schedule();
+  toAppSchedule(): AppSchedule.Schedule {
+    let schedule = new AppSchedule.Schedule(); 
 
     this.schedule.forEach((day, date) => {
-      let matchDay: AppSchedule.MatchDay = {
-        date: date,
-        timeslots: []
-      };
+      let matchDay = new AppSchedule.MatchDay(date);
 
       day.schedule.forEach((teams, time) => {
         let timeSlot: AppSchedule.TimeSlot = {
           time: DayTime.fromString(time),
-          teams: teams
+          teams: teams.map<Team>(team => {
+            return new Team(team, false);
+          }
+          )
         };
 
         matchDay.timeslots.push(timeSlot);
