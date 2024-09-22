@@ -26,13 +26,13 @@ export class Time {
     return new DayTime(hour, minute);
   }
 
-  static fromString(time: string): DayTime {
+  static fromString(time: string): Time {
     const parts = time.split(':');
 
     const hour = parseInt(parts[0]);
     const minute = parseInt(parts[1]);
 
-    return new DayTime(hour, minute);
+    return new Time(hour, minute);
   }
 
   addTime(time: Time) {
