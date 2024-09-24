@@ -62,6 +62,33 @@ export const handle : Handle = async ({ event, resolve }) => {
       }
     })
 
+    const scheduleMonth_view_query = `
+    CREATE VIEW IF NOT EXISTS scheduleMonth AS
+    SELECT *,
+    -- Create a column from date that converts the date "YYYY-M?M-DD" to "YYYY-MM"
+    strftime('%Y-%m', date) AS month
+    FROM scheduleLengths`;
+
+    db.run(scheduleMonth_view_query, (err) => {
+      if(err) {
+        throw err
+      }
+    })
+
+    const scheduleReports_view_query = `
+    CREATE VIEW IF NOT EXISTS scheduleReports AS
+    SELECT  
+        CAST(SUBSTR(month, 3, 2) || SUBSTR(month, 6, 2) AS INTEGER) AS id,
+        month
+    FROM 
+    (SELECT month FROM scheduleMonth GROUP BY month)`;
+
+    db.run(scheduleReports_view_query, (err) => {
+      if(err) {
+        throw err
+      }
+    })
+
     const teamLength_view_query = `
     CREATE VIEW IF NOT EXISTS teamLengths AS
     SELECT teams.id, teams.name, 

@@ -14,6 +14,15 @@ export interface ScheduleLenghts extends ScheduleOffset {
   timeLength: number;
 }
 
+export interface ScheduleMonth extends ScheduleLenghts {
+  month: string;
+}
+
+export interface ScheduleReports {
+  id: number;
+  month: string;
+}
+
 export interface Team {
   id: number;
   name: string;
