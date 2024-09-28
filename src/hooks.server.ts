@@ -91,7 +91,7 @@ export const handle : Handle = async ({ event, resolve }) => {
 
     const teamLength_view_query = `
     CREATE VIEW IF NOT EXISTS teamLengths AS
-    SELECT teams.id, teams.name, 
+    SELECT teams.id, teams.name, teams.parents, 
     CASE WHEN sum(timeLength) IS NULL THEN 0 ELSE sum(timeLength) END as totalLength
     FROM teams
     LEFT JOIN scheduleLengths ON teams.id = scheduleLengths.teamID
