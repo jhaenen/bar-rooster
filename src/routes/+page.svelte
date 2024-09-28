@@ -1,38 +1,18 @@
 <script lang="ts">
-  import { Schedule } from '$lib/types/Schedule';
-  import type { POJOSchedule } from '$lib/types/Schedule';
+  import * as DB from "$lib/db/types";
+  import { ReportMonth } from "$lib/types/Reports";
 
-  export let data: POJOSchedule;
+  export let data: {
+    reports: DB.ScheduleReport[];
+  };
 
-  const schedule: Schedule = Schedule.fromPOJO(data);
+  const reports: ReportMonth[] = data.reports.map((report) => {
+    return ReportMonth.fromDB(report);
+  });
 </script>
 
-{#each schedule.matchDays as date}
-{@const matchDayTeams = date.getTeams()}
+{#each reports as report}
   <div>
-    <h2>{date.date}</h2>
-    <ul>
-      {#each date.timeslots as timeslot}
-        <li>
-          <div>
-          <h3>{timeslot.time}</h3>
-          <!-- Create select with match day teams -->
-          <select>
-            <option value="" hidden disabled selected>Selecteer team</option>
-          {#each matchDayTeams as matchDayTeam}
-          <option value={matchDayTeam.id}>{matchDayTeam.name}</option>
-          {/each}
-        </select>
-      </div>
-          <ul>
-            {#each timeslot.teams as team}
-              <li>
-                <h4>{team.name} {(team.parents) ? "(Ouders)" : ""}</h4>  
-              </li>
-            {/each}
-          </ul>
-        </li>
-      {/each}
-    </ul>
-  </div>  
+    <a href="report/{report.id}">{report}</a>
+  </div>
 {/each}

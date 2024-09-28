@@ -1,18 +1,13 @@
-import { fetchMonthSchedule } from "$lib/GameFetcher/GameFetcher";
-import { Schedule } from "$lib/types/Schedule";
-
 import * as DB from "$lib/db/types";
 
 export async function load({ locals }) {
-  const schedule: Schedule = await fetchMonthSchedule(10);
-
-  const loadScheduleLengths = new Promise<DB.ScheduleLenghts[]>((resolve, reject) => {
+  const loadScheduleReports = new Promise<DB.ScheduleReport[]>((resolve, reject) => {
 
     const db = locals.db;
 
-    const scheduleLengthsQuery = "SELECT * FROM scheduleLengths";
+    const scheduleReportsQuery = "SELECT * FROM scheduleReports";
 
-    db.all<DB.ScheduleLenghts>(scheduleLengthsQuery, (err, rows) => {
+    db.all<DB.ScheduleReport>(scheduleReportsQuery, (err, rows) => {
       if (err) {
         reject(new Error(err?.message));
       } else {
@@ -21,9 +16,11 @@ export async function load({ locals }) {
     });
   });
 
-  const scheduleLengths = await loadScheduleLengths;
+  const scheduleReports = await loadScheduleReports;
 
-  console.log(scheduleLengths);
+  console.log(scheduleReports);
   
-  return schedule.toPOJO();
+  return {
+    reports: scheduleReports
+  };
 }
