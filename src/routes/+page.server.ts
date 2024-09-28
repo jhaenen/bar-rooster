@@ -1,13 +1,13 @@
 import * as DB from "$lib/db/types";
 
 export async function load({ locals }) {
-  const loadScheduleReports = new Promise<DB.ScheduleReports[]>((resolve, reject) => {
+  const loadScheduleReports = new Promise<DB.ScheduleReport[]>((resolve, reject) => {
 
     const db = locals.db;
 
     const scheduleReportsQuery = "SELECT * FROM scheduleReports";
 
-    db.all<DB.ScheduleReports>(scheduleReportsQuery, (err, rows) => {
+    db.all<DB.ScheduleReport>(scheduleReportsQuery, (err, rows) => {
       if (err) {
         reject(new Error(err?.message));
       } else {

@@ -18,7 +18,7 @@ export interface ScheduleMonth extends ScheduleLenghts {
   month: string;
 }
 
-export interface ScheduleReports {
+export interface ScheduleReport {
   id: number;
   month: string;
 }

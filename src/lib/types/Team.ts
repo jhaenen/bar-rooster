@@ -1,4 +1,5 @@
 import { Time } from "./Time";
+import * as DB from "$lib/db/types";
 
 export class Team {
   id: number;
@@ -28,6 +29,18 @@ export class Team {
       parents: this.parents,
       allocatedTime: this.allocatedTime.toString()
     };
+  }
+  
+  static fromDB(dbTeam: DB.Team | DB.TeamLengths): Team {
+    let team = new Team(dbTeam.name, dbTeam.parents);
+    team.id = dbTeam.id;
+
+    // If dbTeam is a TeamLengths object, set the allocated time
+    if ('totalLength' in dbTeam) {
+      team.allocatedTime = Time.fromMinutes(dbTeam.totalLength);
+    }
+
+    return team;
   }
 }
 

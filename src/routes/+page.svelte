@@ -3,11 +3,11 @@
   import { ReportMonth } from "$lib/types/Reports";
 
   export let data: {
-    reports: DB.ScheduleReports[];
+    reports: DB.ScheduleReport[];
   };
 
   const reports: ReportMonth[] = data.reports.map((report) => {
-    return ReportMonth.fromPOJO(report);
+    return ReportMonth.fromDB(report);
   });
 </script>
 
