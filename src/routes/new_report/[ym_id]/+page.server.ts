@@ -1,5 +1,6 @@
 import * as DB from "$lib/db/types";
 import { fetchMonthSchedule } from "$lib/GameFetcher/GameFetcher.js";
+import { Team } from "$lib/types/Team";
 import { redirect } from "@sveltejs/kit";
 
 export async function load({ locals, params }) {
@@ -26,11 +27,29 @@ export async function load({ locals, params }) {
     redirect(308, `/report/${ym_id}`);
   }
 
+  const loadTeams = new Promise<DB.TeamLengths[]>((resolve, reject) => {
+    const db = locals.db;
+
+    const teamsQuery = "SELECT * FROM teamLengths";
+
+    db.all<DB.TeamLengths>(teamsQuery, (err, rows) => {
+      if (err) {
+        reject(new Error(err?.message));
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+
+  const db_teams = await loadTeams;
+
+  const teams: Team[] = db_teams.map((team) => Team.fromDB(team));
+
   // YM_ID is YYMM
   const month: number = parseInt(ym_id.slice(2));
   
-  const schedule = await fetchMonthSchedule(month);
+  const schedule = await fetchMonthSchedule(month, teams);
 
-  console.log(schedule);
-
+  
+  return { schedule: structuredClone(schedule), teams: structuredClone(teams) };
 }

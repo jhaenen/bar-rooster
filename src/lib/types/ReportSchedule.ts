@@ -15,9 +15,13 @@ export class ReportSlot implements ISlot {
   static fromDB(dbSlot: DB.ScheduleMonth): ReportSlot {
     return new ReportSlot(dbSlot.teamID, DayTime.fromString(dbSlot.time));
   }
+
+  static fromPOJO(slot: ReportSlot): ReportSlot {
+    return new ReportSlot(slot.teamID, DayTime.fromPOJO(slot.time));
+  }
 }
 
-export class ReportSchedule extends Schedule<ReportSlot> {
+export class ReportSchedule extends Schedule<ReportDay> {
   reportMonth: ReportMonth;
 
   constructor(reportMonth: ReportMonth) {
@@ -44,5 +48,27 @@ export class ReportSchedule extends Schedule<ReportSlot> {
     });
 
     return monthSchedule;
+  }
+
+  static fromPOJO(pojoSchedule: ReportSchedule): ReportSchedule {
+    let schedule = new ReportSchedule(ReportMonth.fromPOJO(pojoSchedule.reportMonth));
+
+    for (let [_, day] of pojoSchedule.days) {
+      schedule.addDay(ReportDay.fromPOJO(day));
+    }
+
+    return schedule;
+  }
+}
+
+export class ReportDay extends DaySchedule<ReportSlot> {
+  static fromPOJO(pojoDay: ReportDay): ReportDay {
+    let day = new ReportDay(Datum.fromPOJO(pojoDay.date));
+
+    for (let [_, slot] of pojoDay.slots) {
+      day.addSlot(ReportSlot.fromPOJO(slot));
+    }
+
+    return day;
   }
 }

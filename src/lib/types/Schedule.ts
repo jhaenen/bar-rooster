@@ -3,16 +3,18 @@ import type { Datum, DayTime } from "./Time";
 export interface ISlot {
   time: DayTime;
 }
-export class Schedule<Slot extends ISlot> {
+
+export class Schedule<TDaySchedule extends DaySchedule<ISlot>> {
   month: number;
-  days: Map<string, DaySchedule<Slot>>;
+
+  days: Map<string, TDaySchedule>;
 
   constructor(month: number) {
     this.month = month;
-    this.days = new Map<string, DaySchedule<Slot>>();
+    this.days = new Map<string, TDaySchedule>();
   }
 
-  addDay(day: DaySchedule<Slot>) {
+  addDay(day: TDaySchedule) {
     this.days.set(day.date.toString(), day);
   }
 
@@ -37,6 +39,7 @@ export class Schedule<Slot extends ISlot> {
 
 export class DaySchedule<Slot extends ISlot> {
   date: Datum;
+
   slots: Map<string, Slot>;
 
   addSlot(slot: Slot) {
@@ -60,6 +63,14 @@ export class DaySchedule<Slot extends ISlot> {
     this.slots = new Map([...this.slots.entries()].sort((a, b) => {
       return a[0] < b[0] ? -1 : 1;
     }));
+  }
+
+  static fromSelf<Slot extends ISlot>(day: DaySchedule<Slot>): DaySchedule<Slot> {
+    let newDay = new DaySchedule<Slot>(day.date);
+    newDay.slots = day.slots;
+    
+
+    return newDay;
   }
 }
 

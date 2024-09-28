@@ -35,4 +35,8 @@ export class ReportMonth {
   static fromDB(obj: DB.ScheduleReport) {
     return new ReportMonth(obj.id, obj.month);
   }
+
+  static fromPOJO(reportMonth: ReportMonth): ReportMonth {
+    return new ReportMonth(reportMonth.id, reportMonth.month);
+  }
 };

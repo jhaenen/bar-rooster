@@ -1,38 +1,47 @@
 <script lang="ts">
-  import { Schedule } from "$lib/types/Schedule.ts.bak";
-  import type { POJOSchedule } from "$lib/types/Schedule.ts.bak";
+  import { GameSchedule } from "$lib/types/GameSchedule";
+  import { Team, teamIDsToTeams } from "$lib/types/Team";
 
-  // export let data: POJOSchedule;
+  export let data;
 
-  // const schedule: Schedule = Schedule.fromPOJO(data);
+  const schedule = GameSchedule.fromPOJO(data.schedule);
+  const teams = data.teams.map((team) => Team.fromPOJO(team));
 </script>
 
-<!-- {#each schedule.matchDays as date}
-{@const matchDayTeams = date.getTeams()}
+<h1>Schema van {schedule.month}</h1>
+{#each schedule.days as [_, day]}
+  {@const dayTeams = teamIDsToTeams(day.getTeamIDs(), teams)}
   <div>
-    <h2>{date.date}</h2>
+    <h2>{day.date}</h2>
     <ul>
-      {#each date.timeslots as timeslot}
+      {#each day.slots as [_, gameSlot]}
         <li>
           <div>
-          <h3>{timeslot.time}</h3> -->
-<!-- Create select with match day teams -->
-<!-- <select>
-            <option value="" hidden disabled selected>Selecteer team</option>
-          {#each matchDayTeams as matchDayTeam}
-          <option value={matchDayTeam.id}>{matchDayTeam.name}</option>
-          {/each}
-        </select>
-      </div>
+            <h3>{gameSlot.time}</h3>
+            <select>
+              <option value="" hidden disabled selected>Selecteer team</option>
+              {#each dayTeams as dayTeam}
+                {#if dayTeam}
+                  <option value={dayTeam.id}>
+                    {dayTeam.name}
+                    {dayTeam.parents ? "(Ouders)" : ""}
+                  </option>
+                {/if}
+              {/each}
+            </select>
+          </div>
           <ul>
-            {#each timeslot.teams as team}
-              <li>
-                <h4>{team.name} {(team.parents) ? "(Ouders)" : ""}</h4>  
-              </li>
+            {#each gameSlot.teamIDs as teamID}
+              {@const team = teams.find((team) => team.id === teamID)}
+              {#if team}
+                <li>
+                  <h4>{team.name} {team.parents ? "(Ouders)" : ""}</h4>
+                </li>
+              {/if}
             {/each}
           </ul>
         </li>
       {/each}
     </ul>
-  </div>  
-{/each} -->
+  </div>
+{/each}

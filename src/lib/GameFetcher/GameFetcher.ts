@@ -1,8 +1,7 @@
 import { Datum, DayTime } from '$lib/types/Time';
 import type { Team } from '$lib/types/Team';
 
-import { DaySchedule } from '$lib/types/Schedule';
-import { GameSchedule, GameSlot } from '$lib/types/GameSchedule';
+import { GameDay, GameSchedule, GameSlot } from '$lib/types/GameSchedule';
 
 import * as NBBSchedule from "$lib/GameFetcher/types/NBBSchedule";
 import { gameTime } from './config';
@@ -46,11 +45,11 @@ export async function fetchMonthSchedule(month: number, teams: Team[]): Promise<
 
 
   for (const game of games) {
-    const date: Datum = new Datum(game.datum);
+    const date: Datum = Datum.fromDate(new Date(game.kaledatum));
 
     // Check if game date is already in the schedules array
     if (!schedule.hasDay(date)) {
-      let day = new DaySchedule<GameSlot>(date);
+      let day = new GameDay(date);
       schedule.addDay(day);
     }
 
@@ -67,7 +66,7 @@ export async function fetchMonthSchedule(month: number, teams: Team[]): Promise<
     let slot = day.getSlot(time)!;
 
     // Get the team id from the team name
-    const team = teams.find(team => team.name === game.thuisteam);
+    const team = teams.find(team => team.name === formatNBBTeamName(game.thuisteam));
     if (team === undefined) {
       throw new Error(`team ${game.thuisteam} not found`);
     }
@@ -100,4 +99,17 @@ function addLeadAndBackTime(schedule: GameSchedule): GameSchedule {
   });
 
   return schedule;
+}
+
+function formatNBBTeamName(teamName: string): string {
+  // NBB format possibilites: "DAS <teamName>", "DAS <teamName> (VR)"
+  // Return <teamName>
+  
+  const split = teamName.split(' ');
+
+  if (split.length === 1) {
+    return split[0];
+  } else {
+    return split[1];
+  }
 }
