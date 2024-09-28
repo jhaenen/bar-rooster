@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as DB from "$lib/db/types";
-  import { MonthSchedule } from "$lib/types/Reports";
+  import { ReportSchedule } from "$lib/types/ReportSchedule";
   import { Team } from "$lib/types/Team";
   import { Datum } from "$lib/types/Time";
 
@@ -10,7 +10,7 @@
     teams: DB.Team[];
   };
 
-  const schedule: MonthSchedule = MonthSchedule.fromDB(
+  const schedule: ReportSchedule = ReportSchedule.fromDB(
     data.schedule,
     data.month
   );
@@ -18,9 +18,6 @@
   const teamMap = new Map(
     data.teams.map((team) => [team.id, Team.fromDB(team)])
   );
-
-  console.log(schedule);
-  console.log(teamMap);
 </script>
 
 <h1>Schema van {schedule.month}</h1>

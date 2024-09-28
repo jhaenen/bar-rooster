@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as DB from "$lib/db/types";
-  import { ReportMonth } from "$lib/types/Reports";
+  import { ReportMonth } from "$lib/types/ReportMonth";
 
   export let data: {
     reports: DB.ScheduleReport[];
