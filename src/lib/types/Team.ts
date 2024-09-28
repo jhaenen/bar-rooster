@@ -16,9 +16,9 @@ export class Team {
     this.allocatedTime = new Time(0, 0);
   }
 
-  static fromPOJO(pojoTeam: POJOTeam): Team {
+  static fromPOJO(pojoTeam: Team): Team {
     let team = new Team(pojoTeam.name, pojoTeam.parents);
-    team.allocatedTime = Time.fromString(pojoTeam.allocatedTime);
+    team.allocatedTime = pojoTeam.allocatedTime;
 
     return team;
   }
@@ -48,4 +48,8 @@ export interface POJOTeam {
   name: string;
   parents: boolean;
   allocatedTime: string;
+}
+
+export function teamIDsToTeams(teamIDs: number[], teams: Team[]): Team[] {
+  return teamIDs.map(id => teams.find(team => team.id === id)!);
 }

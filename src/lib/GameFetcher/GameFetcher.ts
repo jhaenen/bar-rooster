@@ -1,8 +1,13 @@
-import * as GameFetcher from '$lib/GameFetcher/types/Schedule';
-import * as AppTypes from '$lib/types/Schedule';
-import { DayTime } from '$lib/types/Time';
+import { Datum, DayTime } from '$lib/types/Time';
+import type { Team } from '$lib/types/Team';
 
-export async function fetchMonthSchedule(month: number): Promise<AppTypes.Schedule> {
+import { GameDay, GameSchedule, GameSlot } from '$lib/types/GameSchedule';
+
+import * as NBBSchedule from "$lib/GameFetcher/types/NBBSchedule";
+import { gameTime } from './config';
+
+
+export async function fetchMonthSchedule(month: number, teams: Team[]): Promise<GameSchedule> {
   // Check if month is valid
   if (month < 1 || month > 12) {
     throw new Error('month must be between 1 and 12');
@@ -34,21 +39,18 @@ export async function fetchMonthSchedule(month: number): Promise<AppTypes.Schedu
   const url = `https://data.sportlink.com/programma?gebruiklokaleteamgegevens=NEE&weekoffset=${weekOffset}&eigenwedstrijden=JA&thuis=JA&uit=NEE&client_id=${import.meta.env.VITE_API_KEY}&aantaldagen=${days}`;
 
   const response = await fetch(url);
-  const data = await response.json();
+  const games = await response.json() as NBBSchedule.Wedstrijd[];
   
-  let schedule: GameFetcher.Schedule = new GameFetcher.Schedule();
+  let schedule: GameSchedule = new GameSchedule(month);
 
-  for (const game of data) {
-    const dateString = game.kaledatum;
 
-    // Date string is in format "YYYY-MM-DD 00:00:00.00"
-    const parts = dateString.split(' ')[0].split('-');
-
-    const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  for (const game of games) {
+    const date: Datum = Datum.fromDate(new Date(game.kaledatum));
 
     // Check if game date is already in the schedules array
     if (!schedule.hasDay(date)) {
-      schedule.addDay(date);
+      let day = new GameDay(date);
+      schedule.addDay(day);
     }
 
     let day = schedule.getDay(date)!;
@@ -56,15 +58,58 @@ export async function fetchMonthSchedule(month: number): Promise<AppTypes.Schedu
     const time = DayTime.fromString(game.aanvangstijd);
 
     // Check if timeslot exists
-    if (!day.hasTimeslot(time)) {
-      day.addTimeslot(time);
+    if (!day.hasSlot(time)) {
+      let slot = new GameSlot(time);
+      day.addSlot(slot);
     }
 
-    day.addTeam(time, game.thuisteam);
+    let slot = day.getSlot(time)!;
+
+    // Get the team id from the team name
+    const team = teams.find(team => team.name === formatNBBTeamName(game.thuisteam));
+    if (team === undefined) {
+      throw new Error(`team ${game.thuisteam} not found`);
+    }
+
+    slot.addTeamID(team.id);
   }
 
-  schedule.addLeadAndBackTime();
+  addLeadAndBackTime(schedule);
   schedule.sort();
 
-  return schedule.toAppSchedule();
+  return schedule;
+}
+
+function addLeadAndBackTime(schedule: GameSchedule): GameSchedule {
+  // Add 30 minutes before and after each day
+  schedule.days.forEach((day, _) => {
+    day.sort();
+
+    // Get first and last timeslots of the day
+    const firstTimeslot = DayTime.fromString(Array.from(day.slots.keys())[0]);
+    const lastTimeslot = DayTime.fromString(Array.from(day.slots.keys())[Array.from(day.slots.keys()).length - 1]);
+
+    // Add 30 minutes before and after
+    const leadTime = DayTime.fromMinutes(firstTimeslot.asMinutes() - 30);
+    const backTime = DayTime.addTime(lastTimeslot, gameTime);
+
+    // Create empty game slots for lead and back time
+    day.addSlot(new GameSlot(leadTime));
+    day.addSlot(new GameSlot(backTime));   
+  });
+
+  return schedule;
+}
+
+function formatNBBTeamName(teamName: string): string {
+  // NBB format possibilites: "DAS <teamName>", "DAS <teamName> (VR)"
+  // Return <teamName>
+  
+  const split = teamName.split(' ');
+
+  if (split.length === 1) {
+    return split[0];
+  } else {
+    return split[1];
+  }
 }

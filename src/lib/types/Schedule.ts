@@ -1,101 +1,76 @@
-import { Team, type POJOTeam } from "./Team";
-import { Time } from "./Time";
+import type { Datum, DayTime } from "./Time";
 
-export class Schedule {
-  matchDays: MatchDay[];
+export interface ISlot {
+  time: DayTime;
+}
 
-  constructor() {
-    this.matchDays = [];
+export class Schedule<TDaySchedule extends DaySchedule<ISlot>> {
+  month: number;
+
+  days: Map<string, TDaySchedule>;
+
+  constructor(month: number) {
+    this.month = month;
+    this.days = new Map<string, TDaySchedule>();
   }
 
-  toPOJO(): POJOSchedule {
-    let pojoSchedule: POJOSchedule = {
-      matchDays: []
-    };
-
-    this.matchDays.forEach(matchDay => {
-      let pojoMatchDay: POJOMatchDay = {
-        date: matchDay.date,
-        timeslots: []
-      };
-
-      matchDay.timeslots.forEach(timeSlot => {
-        let pojoTimeSlot: POJOTimeSlot = {
-          time: timeSlot.time.toString(),
-          teams: timeSlot.teams.map(team => team.toPOJO())
-        };
-
-        pojoMatchDay.timeslots.push(pojoTimeSlot);
-      });
-
-      pojoSchedule.matchDays.push(pojoMatchDay);
-    });
-
-    return pojoSchedule;
+  addDay(day: TDaySchedule) {
+    this.days.set(day.date.toString(), day);
   }
 
-  static fromPOJO(pojoSchedule: POJOSchedule): Schedule {
-    let schedule: Schedule = new Schedule();
+  hasDay(date: Datum) {
+    return this.days.has(date.toString());
+  }
 
-    pojoSchedule.matchDays.forEach(pojoMatchDay => {
-      let matchDay = new MatchDay(pojoMatchDay.date);
+  getDay(date: Datum) {
+    return this.days.get(date.toString());
+  }
 
-      pojoMatchDay.timeslots.forEach(pojoTimeSlot => {
-        let timeSlot = new TimeSlot(Time.fromString(pojoTimeSlot.time));
-        timeSlot.teams = pojoTimeSlot.teams.map(pojoTeam => Team.fromPOJO(pojoTeam));
+  sort() {
+    this.days = new Map([...this.days.entries()].sort((a, b) => {
+      return a[0] < b[0] ? -1 : 1;
+    }));
 
-        matchDay.timeslots.push(timeSlot);
-      });
-
-      schedule.matchDays.push(matchDay);
+    this.days.forEach(day => {
+      day.sort();
     });
-
-    return schedule;
   }
 }
 
-export class MatchDay {
-  date: string;
-  timeslots: TimeSlot[];
+export class DaySchedule<Slot extends ISlot> {
+  date: Datum;
 
-  constructor(date: string) {
+  slots: Map<string, Slot>;
+
+  addSlot(slot: Slot) {
+    this.slots.set(slot.time.toString(), slot);
+  }
+
+  hasSlot(time: DayTime) {
+    return this.slots.has(time.toString());
+  }
+
+  getSlot(time: DayTime): Slot | undefined {
+    return this.slots.get(time.toString());
+  }
+
+  constructor(date: Datum) {
     this.date = date;
-    this.timeslots = [];
+    this.slots = new Map<string, Slot>();
   }
 
-  getTeams(): Team[] {
-    let teams: Team[] = [];
-
-    this.timeslots.forEach(timeSlot => {
-      timeSlot.teams.forEach(team => {
-        teams.push(team);
-      });
-    });
-
-    return teams;
+  sort() {
+    this.slots = new Map([...this.slots.entries()].sort((a, b) => {
+      return a[0] < b[0] ? -1 : 1;
+    }));
   }
-}
 
-export class TimeSlot {
-  time: Time;
-  teams: Team[];
+  static fromSelf<Slot extends ISlot>(day: DaySchedule<Slot>): DaySchedule<Slot> {
+    let newDay = new DaySchedule<Slot>(day.date);
+    newDay.slots = day.slots;
+    
 
-  constructor(time: Time) {
-    this.time = time;
-    this.teams = [];
+    return newDay;
   }
 }
 
-export interface POJOSchedule {
-  matchDays: POJOMatchDay[];
-}
-
-export interface POJOMatchDay {
-  date: string;
-  timeslots: POJOTimeSlot[];
-}
-
-export interface POJOTimeSlot {
-  time: string;
-  teams: POJOTeam[];
-}

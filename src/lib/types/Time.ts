@@ -70,6 +70,10 @@ export class Time {
       return 0;
     }
   }
+
+  static fromPOJO(time: Time): Time {
+    return new Time(time.hour, time.minute);
+  }
 }
 
 export class DayTime extends Time {
@@ -88,10 +92,29 @@ export class DayTime extends Time {
       this.hour -= 24;
     }
   }
+
+  static fromPOJO(time: DayTime): DayTime {
+    return new DayTime(time.hour, time.minute);
+  }
+
+  static fromString(time: string): DayTime {
+    const parts = time.split(':');
+
+    const hour = parseInt(parts[0]);
+    const minute = parseInt(parts[1]);
+
+    return new DayTime(hour, minute);
+  }
+
+  static fromMinutes(minutes: number): DayTime {
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+
+    return new DayTime(hour, minute);
+  }
 }
 
-export class Datum {
-  
+export class Datum { 
   // Date string is ALWAYS in format "YYYY-MM-DD"
   private dateString: string;
 
@@ -122,6 +145,10 @@ export class Datum {
     const day = date.getDate().toString().padStart(2, '0');
 
     return new Datum(`${year}-${month}-${day}`);
+  }
+
+  static fromPOJO(date: Datum): Datum {
+    return new Datum(date.dateString);
   }
   
   valueOf(): string {
